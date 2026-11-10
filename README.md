@@ -7,7 +7,6 @@ Web → Webhook n8n → validación → Switch (`nativo` | `http`) → OpenAI �
 ## Estructura
 - `index.html`, `css/styles.css`, `assets/favicon.svg`
 - `js/config.js` (solo datos públicos: Production URL), `validation.js`, `api.js`, `ui.js`, `main.js`
-- `workflow/3.4-webapp-ia-api.workflow.json`: workflow importable en n8n (sin credenciales)
 
 ## Contrato
 Solicitud: `{ "tema", "nivel", "pregunta", "integracion" }` (`nativo` | `http`, pregunta ≤ 1000 caracteres).
@@ -36,5 +35,21 @@ GitHub Pages aloja la interfaz; las consultas dependen del workflow activo en n8
 ## Seguridad
 La clave de OpenAI vive solo en Credentials de n8n. La URL del Webhook es pública y CORS no es autenticación; desactiva el Webhook tras la evaluación.
 
-## Estado
-La interfaz está preparada para GitHub Pages. Pendiente: configurar la Production URL del Webhook, vincular las credenciales en n8n y completar las pruebas de integración y conclusiones.
+## Workflow n8n
+`3.4 Web app para automatización IA - API` (n8n Cloud): Webhook POST (único) → Validar entrada → ¿válida? (si no, 400) → Normalizar entrada (Set) → Switch por `integracion` → OpenAI nativo **o** HTTP Request a `/v1/responses` (ambos con la credencial gestionada en n8n, modelo `gpt-4o-mini`, máx. 900 tokens) → Normalizar salida → Respond to Webhook. Si OpenAI falla, la salida es un 502 genérico sin detalles internos.
+
+## Pruebas ejecutadas (curl contra la Production URL)
+| Caso | Entrada | Esperado | Observado | Cumple |
+|---|---|---|---|---|
+| Nativo, Básico | Redes / ¿Qué es una dirección IP? | 200 + contrato | 200, `ok:true`, 4 secciones | Sí |
+| HTTP, Intermedio | misma pregunta | 200 + mismo contrato | 200, `ok:true`, respuesta distinta y más técnica | Sí |
+| Pregunta vacía | espacios | 400 sin llamar a OpenAI | 400 `{"ok":false,"mensaje":"Escribe tu pregunta."}` | Sí |
+| Preflight CORS | OPTIONS con Origin de Pages | 204 + cabeceras CORS | 204, `access-control-allow-origin` del origen, `allow-headers: content-type` | Sí |
+| Ejecuciones | n8n Executions | una rama por petición | 5 ejecuciones exitosas registradas | Sí |
+
+Pendientes de ejecutar: pruebas desde el navegador en GitHub Pages, nivel Avanzado, cambio de tema, falla de red/timeout y vistas móvil/escritorio.
+
+## Entrega
+- Repositorio: https://github.com/ALONSORGT1/webapp-automatizacion-ia
+- Webhook (Production URL, pública): https://cloudfloww.app.n8n.cloud/webhook/webapp-automatizacion-ia
+- GitHub Pages: pendiente de confirmar (https://alonsorgt1.github.io/webapp-automatizacion-ia/ una vez activado en Settings → Pages → `main` → `/(root)`).
