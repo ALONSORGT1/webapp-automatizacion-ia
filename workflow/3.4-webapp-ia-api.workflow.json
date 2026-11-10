@@ -1,0 +1,383 @@
+{
+  "name": "3.4 Web app para automatización IA - API",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webapp-automatizacion-ia",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "webapp-automatizacion-ia"
+    },
+    {
+      "parameters": {
+        "jsCode": "const TEMAS = ['Inteligencia artificial','Redes','Programación','Bases de datos','Internet de las cosas (IoT)'];\nconst NIVELES = ['Básico','Intermedio','Avanzado'];\nconst INTEG = ['nativo','http'];\nconst CLAVES = ['tema','nivel','pregunta','integracion'];\nlet b = $input.first().json.body;\nconst fail = (m) => [{ json: { ok: false, status: 400, mensaje: m } }];\nif (!b || typeof b !== 'object' || Array.isArray(b)) return fail('Revisa los campos e inténtalo de nuevo.');\nif (Object.keys(b).some(k => !CLAVES.includes(k))) return fail('Revisa los campos e inténtalo de nuevo.');\nfor (const k of CLAVES) if (typeof b[k] !== 'string') return fail('Revisa los campos e inténtalo de nuevo.');\nconst pregunta = b.pregunta.normalize('NFC').replace(/\\s+/g,' ').trim();\nif (!pregunta || pregunta.length > 1000) return fail('La pregunta es obligatoria y no puede superar 1000 caracteres.');\nif (!TEMAS.includes(b.tema) || !NIVELES.includes(b.nivel) || !INTEG.includes(b.integracion)) return fail('Revisa los campos e inténtalo de nuevo.');\nreturn [{ json: { ok: true, tema: b.tema, nivel: b.nivel, pregunta, integracion: b.integracion } }];"
+      },
+      "name": "Validar entrada",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c1",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "name": "¿Entrada válida?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "tema",
+              "value": "={{ $json.tema }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "nivel",
+              "value": "={{ $json.nivel }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "pregunta",
+              "value": "={{ $json.pregunta }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "integracion",
+              "value": "={{ $json.integracion }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Normalizar entrada",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "s1",
+                    "leftValue": "={{ $json.integracion }}",
+                    "rightValue": "nativo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "nativo"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "s2",
+                    "leftValue": "={{ $json.integracion }}",
+                    "rightValue": "http",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "http"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Elegir integración",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        880,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "text",
+        "operation": "response",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "id"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "user",
+              "content": "Tema: {{ $json.tema }}\nNivel: {{ $json.nivel }}\nPregunta: {{ $json.pregunta }}"
+            }
+          ]
+        },
+        "options": {
+          "instructions": "Eres un asistente académico de Tecnologías de la Información. Responde en español de México. Ajusta la profundidad al nivel indicado. Estructura la respuesta con: Concepto, Funcionamiento, Ejemplo y Recomendación técnica. Sé conciso, claro y verificable; si no estás seguro de algo, dilo.",
+          "maxTokens": 700
+        }
+      },
+      "name": "OpenAI (nativo)",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1120,
+        100
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "openAiApi": {
+          "id": "VINCULAR",
+          "name": "VINCULAR credencial OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/responses",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'gpt-4.1-mini', instructions: \"Eres un asistente académico de Tecnologías de la Información. Responde en español de México. Ajusta la profundidad al nivel indicado. Estructura la respuesta con: Concepto, Funcionamiento, Ejemplo y Recomendación técnica. Sé conciso, claro y verificable; si no estás seguro de algo, dilo.\", input: 'Tema: ' + $json.tema + '\\nNivel: ' + $json.nivel + '\\nPregunta: ' + $json.pregunta, max_output_tokens: 700 }) }}",
+        "options": {
+          "timeout": 50000
+        }
+      },
+      "name": "OpenAI (HTTP Request)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        300
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "openAiApi": {
+          "id": "VINCULAR",
+          "name": "VINCULAR credencial OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Normalizar entrada').first().json;\nconst r = $input.first().json || {};\nfunction textos(o, out = []) {\n  if (o == null) return out;\n  if (typeof o === 'string') return out;\n  if (Array.isArray(o)) { o.forEach(x => textos(x, out)); return out; }\n  if (typeof o === 'object') {\n    if ((o.type === 'output_text' || o.type === 'text') && typeof o.text === 'string') out.push(o.text);\n    for (const v of Object.values(o)) if (typeof v === 'object') textos(v, out);\n  }\n  return out;\n}\nlet t = '';\nif (typeof r.output_text === 'string') t = r.output_text;\nelse if (typeof r.text === 'string') t = r.text;\nelse t = textos(r).join('\\n');\nt = (t || '').trim();\nif (r.error || !t) return [{ json: { ok: false, status: 502, mensaje: 'El asistente no pudo generar una respuesta. Inténtalo de nuevo.' } }];\nreturn [{ json: { ok: true, status: 200, respuesta: t, tema: base.tema, nivel: base.nivel, integracion: base.integracion } }];"
+      },
+      "name": "Normalizar salida",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1360,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ (() => { const {status, ...rest} = $json; return JSON.stringify(rest); })() }}",
+        "options": {
+          "responseCode": "={{ $json.status || 200 }}",
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json; charset=utf-8"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1600,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validar entrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar entrada": {
+      "main": [
+        [
+          {
+            "node": "¿Entrada válida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Entrada válida?": {
+      "main": [
+        [
+          {
+            "node": "Normalizar entrada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar entrada": {
+      "main": [
+        [
+          {
+            "node": "Elegir integración",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Elegir integración": {
+      "main": [
+        [
+          {
+            "node": "OpenAI (nativo)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OpenAI (HTTP Request)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI (nativo)": {
+      "main": [
+        [
+          {
+            "node": "Normalizar salida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI (HTTP Request)": {
+      "main": [
+        [
+          {
+            "node": "Normalizar salida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar salida": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

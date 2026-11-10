@@ -1,0 +1,18 @@
+:root { --azul: #1d3557; --azul-2: #457b9d; --claro: #f1faee; }
+body { background: #f4f6fa; color: #1f2933; }
+.hero { background: linear-gradient(135deg, var(--azul) 0%, var(--azul-2) 100%); }
+.eyebrow { text-transform: uppercase; letter-spacing: .08em; font-size: .8rem; opacity: .85; }
+.hero-pill { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); border-radius: .75rem; padding: .9rem 1.1rem; height: 100%; }
+.hero-pill strong, .hero-pill span { display: block; }
+.hero-pill span { font-size: .92rem; opacity: .92; }
+.hero-pill code { color: #fff; }
+.card { border-radius: 1rem; }
+.btn-primary { background: var(--azul); border-color: var(--azul); }
+.btn-primary:hover, .btn-primary:focus { background: #14263f; border-color: #14263f; }
+.form-select, .form-control, .btn { min-height: 44px; }
+.integ { padding: .6rem .6rem .6rem 2.2rem; border: 1px solid #dee2e6; border-radius: .5rem; margin-bottom: .5rem; }
+.integ:has(input:checked) { border-color: var(--azul-2); background: #eef4f8; }
+.integ label { width: 100%; cursor: pointer; }
+.respuesta { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.65; }
+:focus-visible { outline: 3px solid #ffbf47; outline-offset: 2px; }
+.d-flex-visible { display: flex !important; }
