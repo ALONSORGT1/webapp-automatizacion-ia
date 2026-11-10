@@ -45,11 +45,12 @@ La clave de OpenAI vive solo en Credentials de n8n. La URL del Webhook es públi
 | HTTP, Intermedio | misma pregunta | 200 + mismo contrato | 200, `ok:true`, respuesta distinta y más técnica | Sí |
 | Pregunta vacía | espacios | 400 sin llamar a OpenAI | 400 `{"ok":false,"mensaje":"Escribe tu pregunta."}` | Sí |
 | Preflight CORS | OPTIONS con Origin de Pages | 204 + cabeceras CORS | 204, `access-control-allow-origin` del origen, `allow-headers: content-type` | Sí |
+| Navegador en Pages | Bases de datos / Avanzado / http, y campos vacíos | Respuesta renderizada sin recargar; errores visibles | Respuesta de 2 869 caracteres con tema, nivel e integración; spinner y botón deshabilitado; errores de validación; sin errores en consola ni scroll horizontal | Sí |
 | Ejecuciones | n8n Executions | una rama por petición | 5 ejecuciones exitosas registradas | Sí |
 
-Pendientes de ejecutar: pruebas desde el navegador en GitHub Pages, nivel Avanzado, cambio de tema, falla de red/timeout y vistas móvil/escritorio.
+Pendientes de ejecutar: cambio de tema consecutivo, falla de red/timeout y vista móvil.
 
 ## Entrega
 - Repositorio: https://github.com/ALONSORGT1/webapp-automatizacion-ia
 - Webhook (Production URL, pública): https://cloudfloww.app.n8n.cloud/webhook/webapp-automatizacion-ia
-- GitHub Pages: pendiente de confirmar (https://alonsorgt1.github.io/webapp-automatizacion-ia/ una vez activado en Settings → Pages → `main` → `/(root)`).
+- GitHub Pages: https://alonsorgt1.github.io/webapp-automatizacion-ia/ (publicado desde `main` y `/(root)`).
